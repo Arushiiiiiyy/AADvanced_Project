@@ -38,25 +38,5 @@
 
 ![degree_vs_others_sparse.png](plots/degree_vs_others_sparse.png)
 
-![eigenvector_across_datasets.png](plots/eigenvector_across_datasets.png)
-
-![eigenvector_vs_others_dense.png](plots/eigenvector_vs_others_dense.png)
-
-![eigenvector_vs_others_scale_free.png](plots/eigenvector_vs_others_scale_free.png)
-
-![eigenvector_vs_others_small_world.png](plots/eigenvector_vs_others_small_world.png)
-
-![eigenvector_vs_others_sparse.png](plots/eigenvector_vs_others_sparse.png)
-
-![pagerank_across_datasets.png](plots/pagerank_across_datasets.png)
-
-![pagerank_vs_others_dense.png](plots/pagerank_vs_others_dense.png)
-
-![pagerank_vs_others_scale_free.png](plots/pagerank_vs_others_scale_free.png)
-
-![pagerank_vs_others_small_world.png](plots/pagerank_vs_others_small_world.png)
-
-![pagerank_vs_others_sparse.png](plots/pagerank_vs_others_sparse.png)
-
 ![timing_comparison.png](plots/timing_comparison.png)
 
