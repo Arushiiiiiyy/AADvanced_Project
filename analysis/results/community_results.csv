@@ -1,0 +1,9 @@
+Graph,Algorithm,Time_ms,Memory_MB,Communities,Modularity
+sparse,girvan_newman,39.244,0.766,134,0.9667
+sparse,label_propagation,2.688,0.062,230,0.7917
+dense,girvan_newman,663743.103,52.328,2,-0.0
+dense,label_propagation,29.407,0.0,1,0.0
+scale_free,girvan_newman,1375023.662,-2.719,2,0.0805
+scale_free,label_propagation,19.016,0.0,1,0.0
+small_world,girvan_newman,1114747.48,-37.781,2,0.4496
+small_world,label_propagation,10.011,0.0,92,0.6721

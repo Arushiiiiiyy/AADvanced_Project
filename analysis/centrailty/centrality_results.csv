@@ -1,0 +1,17 @@
+GRAPH,ALGO,TIME_MS
+sparse,betweenness,308
+sparse,closeness,174
+sparse,degree,165
+sparse,eigenvector,172
+dense,betweenness,503
+dense,closeness,253
+dense,degree,184
+dense,eigenvector,197
+scale_free,betweenness,315
+scale_free,closeness,191
+scale_free,degree,167
+scale_free,eigenvector,176
+small_world,betweenness,309
+small_world,closeness,188
+small_world,degree,170
+small_world,eigenvector,181

@@ -1,0 +1,128 @@
+📊 CENTRALITY ANALYSIS BENCHMARK
+
+This project benchmarks five centrality algorithms over four synthetic social network graphs and produces performance reports, metrics, and plots.
+
+FOLDER STRUCTURE
+
+analysis/
+│
+├── generate_datasets.py
+│
+├── centrailty/ ← C++ implementations + executables
+│ ├── *.cpp
+│ ├── degree_centrality
+│ ├── closeness_centrality
+│ ├── betweenness_centrality
+│ ├── eigenvector_centrality
+│ ├── pagerank
+│ └── build.sh
+│
+├── src/ ← automation scripts
+│ ├── compute_graph_stats.py
+│ ├── run_centrality_benchmark.py
+│ └── plot_centrality_full.py
+│
+├── results/
+│ ├── graph_stats.csv
+│ └── centrality_results.csv
+│
+└── plots/
+├── runtime.png
+├── runtime_logscale.png
+├── memory.png
+└── ops.png
+
+GRAPH DATASETS
+
+Generated automatically with:
+
+python src/generate_datasets.py
+
+
+Graph Types:
+
+Sparse → Erdős–Rényi (p=0.001)
+Dense → Erdős–Rényi (p=0.1)
+Scale-Free → Barabási–Albert
+Small-World → Watts–Strogatz
+
+Each dataset contains:
+
+*_network_edges.txt
+*_network_nodes.csv
+
+CENTRALITY ALGORITHMS (C++)
+
+Degree Centrality
+Closeness Centrality
+Betweenness Centrality
+Eigenvector Centrality
+PageRank
+
+HOW TO RUN
+
+1️⃣ Build Algorithms
+
+cd centrailty
+chmod +x build.sh
+./build.sh
+
+
+2️⃣ Run Benchmark
+
+python src/run_centrality_benchmark.py
+
+
+Output generated:
+
+results/centrality_results.csv
+
+
+3️⃣ Generate Plots
+
+python src/plot_centrality_full.py
+
+
+Plots saved in:
+
+plots/
+
+OUTPUT METRICS
+
+Graph → Dataset Name
+Algorithm → Centrality Method
+Time_ms → Execution Time
+Memory_MB → Peak Memory Usage
+Ops → Estimated Operation Count
+
+GENERATED PLOTS
+
+runtime.png → Runtime comparison
+runtime_logscale.png → Log-scale runtime
+memory.png → Memory usage comparison
+ops.png → Estimated operations
+
+KEY FINDINGS
+
+• Degree centrality is fastest (O(E))
+• Betweenness is slowest (O(VE))
+• Dense graphs require more time
+• Results match theoretical complexity
+
+NEXT WORK (Not Included Here)
+
+Community detection benchmark:
+
+Girvan–Newman
+Label Propagation
+
+Planned output:
+
+results/community_results.csv
+
+REPRODUCIBILITY
+
+✔ No external datasets required
+✔ All code included
+✔ One-command experiment execution
+✔ Deterministic (fixed random seeds)
