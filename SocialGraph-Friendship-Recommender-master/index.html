@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AADvanced Social Dashboard</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
+        #network { width: 100vw; height: 100vh; border: none; }
+        .hud { 
+            position: absolute; top: 20px; left: 20px; 
+            background: rgba(30, 30, 30, 0.85); 
+            padding: 20px; border-radius: 12px; 
+            border: 1px solid #444;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            width: 300px;
+        }
+        .narrator {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-left: 3px solid #00ff00;
+            color: #eee;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            min-height: 40px;
+            transition: border-color 0.3s ease;
+        }
+        h2 { margin: 0 0 10px 0; font-size: 1.2rem; color: #fff; }
+        p { margin: 5px 0; font-size: 0.9rem; color: #ccc; }
+        .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+        
+        /* Control Panel Styles */
+        .control-panel {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #555;
+        }
+        .control-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 8px;
+            background: #444;
+            color: white;
+            border: 1px solid #666;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #555;
+            border-color: #777;
+        }
+        .btn:disabled {
+            background: #222;
+            color: #666;
+            cursor: not-allowed;
+            border-color: #333;
+        }
+        .btn-primary {
+            background: #28a745;
+            border-color: #28a745;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #218838;
+        }
+        .btn-danger {
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #c82333;
+        }
+        .slider-container {
+            margin: 10px 0;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #444;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #28a745;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #28a745;
+            cursor: pointer;
+            border: none;
+        }
+        .step-counter {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin: 5px 0;
+        }
+        .algo-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(40, 167, 69, 0.05));
+            border-left: 4px solid #28a745;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        .algo-title {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .algo-details {
+            color: #ccc;
+            line-height: 1.6;
+        }
+        .algo-details strong {
+            color: #fff;
+        }
+        .algo-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(40, 167, 69, 0.3);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #4ade80;
+        }
+        
+        /* Profile Card Sidebar */
+        .profile-card {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(30, 30, 30, 0.98), rgba(20, 20, 20, 0.98));
+            backdrop-filter: blur(10px);
+            border-left: 2px solid #444;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 30px;
+        }
+        .profile-card.active {
+            right: 0;
+        }
+        .profile-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .profile-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+        .profile-header {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #444;
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+        }
+        .profile-id {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        .profile-section {
+            margin-bottom: 25px;
+        }
+        .profile-section-title {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .profile-metric {
+            background: rgba(40, 167, 69, 0.15);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #28a745;
+        }
+        .profile-metric-label {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        .profile-metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .profile-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            border-radius: 16px;
+            color: #667eea;
+            font-size: 0.85rem;
+            margin: 4px;
+        }
+        .profile-friend {
+            display: inline-block;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #ccc;
+            font-size: 0.85rem;
+            margin: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .profile-friend:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .profile-pagerank {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2));
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #ffd700;
+            margin-bottom: 10px;
+        }
+        .profile-pagerank-label {
+            font-size: 0.85rem;
+            color: #ccc;
+            margin-bottom: 5px;
+        }
+        .profile-pagerank-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .profile-pagerank-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .profile-pagerank-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="network"></div>
+    
+    <!-- Profile Card Sidebar -->
+    <div id="profileCard" class="profile-card">
+        <button class="profile-close" id="closeProfile">×</button>
+        
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">?</div>
+            <div class="profile-name" id="profileName">User Name</div>
+            <div class="profile-id" id="profileId">ID: —</div>
+        </div>
+        
+        <div class="profile-section">
+            <div class="profile-section-title">📊 Network Metrics</div>
+            <div class="profile-metric">
+                <div class="profile-metric-label">Friend Count (Degree)</div>
+                <div class="profile-metric-value" id="profileFriendCount">0</div>
+            </div>
+        </div>
+        
+        <div class="profile-section">
+            <div class="profile-section-title">⭐ PageRank Score</div>
+            <div class="profile-pagerank">
+                <div class="profile-pagerank-label">Influence Score</div>
+                <div class="profile-pagerank-value" id="profilePageRank">0.0000</div>
+                <div class="profile-pagerank-bar">
+                    <div class="profile-pagerank-fill" id="profilePageRankBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="profile-section">
+            <div class="profile-section-title">🏷️ Interests (Tags)</div>
+            <div id="profileTags">No tags</div>
+        </div>
+        
+        <div class="profile-section">
+            <div class="profile-section-title">👥 Friends</div>
+            <div id="profileFriends">No friends</div>
+        </div>
+    </div>
+    
+    <div class="hud">
+        <h2>Network Dashboard</h2>
+        <p>Status: <span style="color: #00ff00; font-weight: bold;">● Live</span></p>
+        
+        <!-- Algorithm Info Panel -->
+        <div id="algoInfo" class="algo-info" style="display: none;">
+            <div class="algo-title">
+                <span>🔬</span>
+                <span id="algoName">Algorithm Name</span>
+            </div>
+            <div id="menuContext" style="font-size: 0.75rem; color: #888; margin-top: 5px; padding: 5px 10px; background: rgba(0,0,0,0.3); border-radius: 4px; display: none;">
+                Menu Context
+            </div>
+            <div class="algo-details" id="algoDetails">
+                Loading algorithm details...
+            </div>
+        </div>
+        
+        <div id="narratorBox" class="narrator">
+            System Ready.<br>Waiting for simulation...
+        </div>
+
+        <!-- Algorithm Output/Results Panel -->
+        <div id="outputPanel" style="margin-top: 15px; padding: 12px; background: rgba(0, 100, 0, 0.2); border-left: 3px solid #00ff00; border-radius: 4px; display: none;">
+            <div style="font-weight: bold; color: #00ff00; margin-bottom: 8px;">📊 Results:</div>
+            <div id="outputText" style="font-size: 0.85rem; color: #ccc; font-family: 'Courier New', monospace;"></div>
+        </div>
+
+        <!-- Speed Control Slider -->
+        <div class="slider-container">
+            <div class="slider-label">
+                <span>Speed</span>
+                <span id="speedValue">1.0x</span>
+            </div>
+            <input type="range" id="speedSlider" min="50" max="1000" value="200" step="50">
+        </div>
+
+        <!-- Step Counter -->
+        <div class="step-counter" id="stepCounter">Step: 0 / 0</div>
+
+        <!-- Control Buttons -->
+        <div class="control-panel">
+            <button id="playBtn" class="btn btn-primary">▶ Play</button>
+            <div class="control-row">
+                <button id="prevBtn" class="btn" disabled>⏮ Previous</button>
+                <button id="nextBtn" class="btn" disabled>Next ⏭</button>
+            </div>
+            <div class="control-row">
+                <button id="pauseBtn" class="btn" disabled>⏸ Pause</button>
+                <button id="resetBtn" class="btn btn-danger">🔄 Reset</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 15px; border-top: 1px solid #555; padding-top: 10px;">
+            <p><span class="legend-dot" style="background:#2B7CE9;"></span>Coders</p>
+            <p><span class="legend-dot" style="background:#FA0A10;"></span>Artists</p>
+            <p><span class="legend-dot" style="background:#FFA500;"></span>Athletes</p>
+            <p><span class="legend-dot" style="background:#97C2FC;"></span>General</p>
+        </div>
+    </div>
+
+    <script src="graph_data.js"></script>
+
+    <script type="text/javascript">
+        // 1. Setup the specific styling groups
+        const options = {
+            nodes: {
+                shape: 'dot',
+                size: 25,
+                font: { size: 14, color: '#ffffff', face: 'arial' },
+                borderWidth: 2,
+                shadow: true
+            },
+            edges: {
+                width: 2,
+                color: { color: '#555555', highlight: '#00ff00', hover: '#00ff00' },
+                smooth: { type: 'continuous' }
+            },
+            physics: {
+                stabilization: false,
+                barnesHut: { 
+                    gravitationalConstant: -2000, 
+                    springConstant: 0.04, 
+                    springLength: 95 
+                }
+            },
+            interaction: { hover: true },
+            groups: {
+                coding: { color: { background: '#2B7CE9', border: '#1a4f96' } },
+                art:    { color: { background: '#FA0A10', border: '#a30509' } },
+                sports: { color: { background: '#FFA500', border: '#b87700' } },
+                default:{ color: { background: '#97C2FC', border: '#2B7CE9' } }
+            }
+        };
+
+        // 2. Check if data exists
+        if (typeof graphData !== 'undefined') {
+            const container = document.getElementById('network');
+            const data = { 
+                nodes: new vis.DataSet(graphData.nodes), 
+                edges: new vis.DataSet(graphData.edges) 
+            };
+            const network = new vis.Network(container, data, options);
+
+            // --- Helper: Reset Graph to original state ---
+            function resetGraph() {
+                // Reloading the dataset is the cleanest way to remove all temporary colors
+                data.nodes.clear(); 
+                data.nodes.add(graphData.nodes);
+                
+                data.edges.clear(); 
+                data.edges.add(graphData.edges);
+                
+                document.getElementById('narratorBox').innerText = "Simulation Reset.";
+                document.getElementById('narratorBox').style.borderLeft = "3px solid #00ff00";
+            }
+
+            // --- Animation State ---
+            let currentStep = 0;
+            let isPlaying = false;
+            let animationInterval = null;
+            let animationSpeed = 200; // milliseconds per step
+
+            // --- UI Elements ---
+            const playBtn = document.getElementById('playBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const speedSlider = document.getElementById('speedSlider');
+            const speedValue = document.getElementById('speedValue');
+            const stepCounter = document.getElementById('stepCounter');
+            const narrator = document.getElementById('narratorBox');
+            const algoInfo = document.getElementById('algoInfo');
+            const algoName = document.getElementById('algoName');
+            const algoDetails = document.getElementById('algoDetails');
+
+            // --- Display Algorithm Info ---
+            function displayAlgorithmInfo() {
+                if (graphData.algorithm && graphData.algorithm.name) {
+                    algoInfo.style.display = 'block';
+                    algoName.innerText = graphData.algorithm.name;
+                    
+                    let details = graphData.algorithm.description || 'No description available.';
+                    
+                    // Add menu context based on algorithm type and target user
+                    const menuContext = document.getElementById('menuContext');
+                    let contextText = '';
+                    
+                    if (graphData.algorithm.targetUser && graphData.algorithm.targetUser !== -1) {
+                        const targetUser = graphData.algorithm.targetUser;
+                        const algoName = graphData.algorithm.name;
+                        
+                        if (algoName.includes('Influence')) {
+                            contextText = `📋 Menu Option 1 → Influence Algorithm for User ${targetUser}`;
+                        } else if (algoName.includes('Proximity')) {
+                            contextText = `📋 Menu Option 1 → Proximity Algorithm for User ${targetUser}`;
+                        } else if (algoName.includes('Hybrid')) {
+                            contextText = `📋 Menu Option 1 → Hybrid Algorithm for User ${targetUser}`;
+                        } else if (algoName.includes('Shortest Path') || algoName.includes('BFS')) {
+                            contextText = `📋 Menu Option 4 → Shortest Path to User ${targetUser}`;
+                        }
+                    } else {
+                        const algoName = graphData.algorithm.name;
+                        if (algoName.includes('Community')) {
+                            contextText = `📋 Menu Option 5 → Analyze Network Communities`;
+                        } else if (algoName.includes('Closeness')) {
+                            contextText = `📋 Menu Option 6 → Find Most Central User`;
+                        } else if (algoName.includes('Betweenness') || algoName.includes('Bridge')) {
+                            contextText = `📋 Menu Option 7 → Find Bridge Users`;
+                        } else if (algoName.includes('PageRank')) {
+                            contextText = `📋 Menu Option 10 → PageRank Analysis (Export)`;
+                        }
+                    }
+                    
+                    if (contextText) {
+                        menuContext.innerText = contextText;
+                        menuContext.style.display = 'block';
+                    }
+                    
+                    // Add target user info if available
+                    if (graphData.algorithm.targetUser && graphData.algorithm.targetUser !== -1) {
+                        details += `<br><br><strong>Target User:</strong> ${graphData.algorithm.targetUser}`;
+                    }
+                    
+                    // Add event count
+                    const eventCount = graphData.history ? graphData.history.length : 0;
+                    details += `<br><strong>Steps:</strong> ${eventCount} operations`;
+                    
+                    // Detect algorithm type from events
+                    if (eventCount > 0) {
+                        const eventTypes = new Set(graphData.history.map(e => e.type));
+                        if (eventTypes.has('recolor')) {
+                            details += ' <span class="algo-badge">Label Propagation</span>';
+                        } else if (eventTypes.has('match')) {
+                            details += ' <span class="algo-badge">Recommendation</span>';
+                        } else if (eventTypes.has('path')) {
+                            details += ' <span class="algo-badge">Pathfinding</span>';
+                        }
+                    }
+                    
+                    algoDetails.innerHTML = details;
+                } else {
+                    // Try to infer algorithm from event types
+                    if (graphData.history && graphData.history.length > 0) {
+                        algoInfo.style.display = 'block';
+                        const eventTypes = new Set(graphData.history.map(e => e.type));
+                        
+                        if (eventTypes.has('recolor')) {
+                            algoName.innerText = 'Community Detection';
+                            algoDetails.innerHTML = 'Detecting network communities using Label Propagation algorithm.<br><strong>Steps:</strong> ' + graphData.history.length + ' operations <span class="algo-badge">Label Propagation</span>';
+                        } else if (eventTypes.has('match')) {
+                            algoName.innerText = 'Friend Recommendation';
+                            algoDetails.innerHTML = 'Finding friend recommendations using graph algorithms.<br><strong>Steps:</strong> ' + graphData.history.length + ' operations <span class="algo-badge">Recommendation</span>';
+                        } else if (eventTypes.has('path')) {
+                            algoName.innerText = 'Shortest Path';
+                            algoDetails.innerHTML = 'Computing shortest path using BFS (Breadth-First Search).<br><strong>Steps:</strong> ' + graphData.history.length + ' operations <span class="algo-badge">Pathfinding</span>';
+                        } else {
+                            algoName.innerText = 'Graph Algorithm';
+                            algoDetails.innerHTML = 'Analyzing network structure.<br><strong>Steps:</strong> ' + graphData.history.length + ' operations';
+                        }
+                    }
+                }
+            }
+
+            // --- Update UI State ---
+            function updateUI() {
+                const totalSteps = graphData.history ? graphData.history.length : 0;
+                stepCounter.innerText = `Step: ${currentStep} / ${totalSteps}`;
+                
+                prevBtn.disabled = currentStep === 0 || isPlaying;
+                nextBtn.disabled = currentStep >= totalSteps || isPlaying;
+                playBtn.disabled = isPlaying || currentStep >= totalSteps;
+                pauseBtn.disabled = !isPlaying;
+            }
+
+            // --- Apply Single Step of Animation ---
+            function applyStep(stepIndex) {
+                if (!graphData.history || stepIndex < 0 || stepIndex >= graphData.history.length) {
+                    return;
+                }
+
+                const event = graphData.history[stepIndex];
+                const nodeID = event.id;
+                const fromID = event.from;
+
+                // Light up the edge if we have a parent
+                if (fromID !== -1 && fromID !== undefined) {
+                    const edges = data.edges.get({
+                        filter: function (item) {
+                            return (item.from === fromID && item.to === nodeID) || 
+                                   (item.from === nodeID && item.to === fromID);
+                        }
+                    });
+                    
+                    if (edges.length > 0) {
+                        data.edges.update({ 
+                            id: edges[0].id, 
+                            color: { color: '#FFFF00', opacity: 1.0, width: 3 } 
+                        });
+                    }
+                }
+
+                // Apply node colors and narration based on event type
+                if (event.type === 'source') {
+                    narrator.innerText = `Analyzing User ${nodeID}...`;
+                    narrator.style.borderLeft = "3px solid #FFFFFF";
+                    data.nodes.update({ id: nodeID, color: { background: '#FFFFFF', border: '#FFFFFF' }, size: 35 });
+                } 
+                else if (event.type === 'visit') {
+                    narrator.innerText = `Visiting Friend: User ${nodeID}`;
+                    narrator.style.borderLeft = "3px solid #FFFF00";
+                    data.nodes.update({ id: nodeID, color: { background: '#FFFF00', border: '#FFA500' }, size: 30 });
+                } 
+                else if (event.type === 'scan') {
+                    narrator.innerText = `Checking Candidate: User ${nodeID}`;
+                    narrator.style.borderLeft = "3px solid #00FFFF";
+                    data.nodes.update({ id: nodeID, color: { background: '#00FFFF', border: '#008B8B' } });
+                } 
+                else if (event.type === 'match') {
+                    narrator.innerHTML = `<strong>>>> RECOMMENDATION: User ${nodeID} <<<</strong>`;
+                    narrator.style.borderLeft = "3px solid #FF1493";
+                    data.nodes.update({ id: nodeID, color: { background: '#FF1493', border: '#FFFFFF' }, size: 45 });
+                }
+                else if (event.type === 'path') {
+                    narrator.innerText = `Path Step: User ${nodeID}`;
+                    narrator.style.borderLeft = "3px solid #FFD700";
+                    data.nodes.update({ id: nodeID, color: { background: '#FFD700', border: '#FFD700', borderWidth: 3 } });
+                }
+                else if (event.type === 'recolor') {
+                    narrator.innerText = `User ${nodeID} joins Community ${Math.floor(event.val)}`;
+                    narrator.style.borderLeft = "3px solid #9370DB";
+                    const communityColors = [
+                        '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', 
+                        '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2',
+                        '#F8B739', '#52B788', '#E63946', '#A8DADC'
+                    ];
+                    const colorIndex = Math.floor(event.val) % communityColors.length;
+                    const communityColor = communityColors[colorIndex];
+                    data.nodes.update({ 
+                        id: nodeID, 
+                        color: { background: communityColor, border: communityColor }, 
+                        size: 28 
+                    });
+                }
+            }
+
+            // --- Initialize Dimmed State ---
+            function initializeDimState() {
+                if (!graphData.history || graphData.history.length === 0) {
+                    alert("No animation history found! Run an algorithm in C++ and Export first.");
+                    return false;
+                }
+
+                const dimNodes = [];
+                data.nodes.forEach(node => {
+                    dimNodes.push({ id: node.id, color: { background: '#333333', border: '#222222' } });
+                });
+                data.nodes.update(dimNodes);
+
+                const edgeIds = data.edges.getIds();
+                const dimEdges = edgeIds.map(id => ({ id: id, color: { color: '#888888', opacity: 0.6 } }));
+                data.edges.update(dimEdges);
+
+                return true;
+            }
+
+            // --- Display Final Results ---
+            function displayFinalResults() {
+                const outputPanel = document.getElementById('outputPanel');
+                const outputText = document.getElementById('outputText');
+                const algoName = graphData.algorithm.name;
+                let resultsHTML = '';
+
+                // Collect results based on algorithm type
+                if (algoName.includes('Recommendation') || algoName.includes('Influence') || algoName.includes('Proximity') || algoName.includes('Hybrid')) {
+                    // Count recommendations (match events)
+                    const matches = graphData.history.filter(e => e.type === 'match');
+                    if (matches.length > 0) {
+                        resultsHTML = `Found <strong>${matches.length} recommendations</strong> for User ${graphData.algorithm.targetUser}:<br>`;
+                        matches.forEach((m, idx) => {
+                            resultsHTML += `  ${idx + 1}. User ${m.id} (Score: ${m.val.toFixed(4)})<br>`;
+                        });
+                    } else {
+                        resultsHTML = 'No recommendations found.';
+                    }
+                }
+                else if (algoName.includes('Shortest Path') || algoName.includes('BFS')) {
+                    // Show path
+                    const pathNodes = graphData.history.filter(e => e.type === 'path');
+                    if (pathNodes.length > 0) {
+                        resultsHTML = `Path found with <strong>${pathNodes.length} hops</strong>:<br>`;
+                        resultsHTML += pathNodes.map(p => `User ${p.id}`).join(' → ');
+                    } else {
+                        resultsHTML = 'No path found.';
+                    }
+                }
+                else if (algoName.includes('Community')) {
+                    // Count communities
+                    const communities = new Set(graphData.history.map(e => Math.floor(e.val)));
+                    resultsHTML = `Detected <strong>${communities.size} communities</strong><br>`;
+                    resultsHTML += `${graphData.history.length} label propagation events`;
+                }
+                else if (algoName.includes('Betweenness') || algoName.includes('Bridge')) {
+                    // Top betweenness users
+                    const users = graphData.history.filter(e => e.type === 'visit');
+                    users.sort((a, b) => b.val - a.val);
+                    const top5 = users.slice(0, 5);
+                    resultsHTML = `Top ${top5.length} Bridge Users (Betweenness Centrality):<br>`;
+                    top5.forEach((u, idx) => {
+                        resultsHTML += `  ${idx + 1}. User ${u.id} (Score: ${u.val.toFixed(4)})<br>`;
+                    });
+                }
+                else if (algoName.includes('Closeness')) {
+                    // Top closeness users
+                    const users = graphData.history.filter(e => e.type === 'visit');
+                    users.sort((a, b) => b.val - a.val);
+                    const top5 = users.slice(0, 5);
+                    resultsHTML = `Top ${top5.length} Central Users (Closeness Centrality):<br>`;
+                    top5.forEach((u, idx) => {
+                        resultsHTML += `  ${idx + 1}. User ${u.id} (Score: ${u.val.toFixed(4)})<br>`;
+                    });
+                }
+                else if (algoName.includes('PageRank')) {
+                    // Top PageRank users
+                    const users = graphData.history.filter(e => e.type === 'visit');
+                    users.sort((a, b) => b.val - a.val);
+                    const top5 = users.slice(0, 5);
+                    resultsHTML = `Top ${top5.length} Influential Users (PageRank):<br>`;
+                    top5.forEach((u, idx) => {
+                        resultsHTML += `  ${idx + 1}. User ${u.id} (Score: ${u.val.toFixed(4)})<br>`;
+                    });
+                }
+
+                if (resultsHTML) {
+                    outputText.innerHTML = resultsHTML;
+                    outputPanel.style.display = 'block';
+                }
+            }
+
+            // --- Play Animation ---
+            function play() {
+                if (!initializeDimState() && currentStep === 0) return;
+                
+                isPlaying = true;
+                updateUI();
+
+                animationInterval = setInterval(() => {
+                    if (currentStep >= graphData.history.length) {
+                        pause();
+                        narrator.innerHTML = "<strong>✓ Simulation Complete.</strong>";
+                        narrator.style.borderLeft = "3px solid #FFD700";
+                        displayFinalResults();
+                        return;
+                    }
+
+                    applyStep(currentStep);
+                    currentStep++;
+                    updateUI();
+                }, animationSpeed);
+            }
+
+            // --- Pause Animation ---
+            function pause() {
+                isPlaying = false;
+                if (animationInterval) {
+                    clearInterval(animationInterval);
+                    animationInterval = null;
+                }
+                updateUI();
+            }
+
+            // --- Reset Animation ---
+            function reset() {
+                pause();
+                currentStep = 0;
+                document.getElementById('outputPanel').style.display = 'none';
+                resetGraph();
+                updateUI();
+            }
+
+            // --- Next Step ---
+            function nextStep() {
+                if (currentStep === 0) {
+                    initializeDimState();
+                }
+                if (currentStep < graphData.history.length) {
+                    applyStep(currentStep);
+                    currentStep++;
+                    updateUI();
+                }
+                if (currentStep >= graphData.history.length) {
+                    narrator.innerHTML = "<strong>Simulation Complete.</strong>";
+                    narrator.style.borderLeft = "3px solid #FFD700";
+                }
+            }
+
+            // --- Previous Step ---
+            function prevStep() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    // To go back, we need to reset and replay up to currentStep
+                    resetGraph();
+                    initializeDimState();
+                    for (let i = 0; i < currentStep; i++) {
+                        applyStep(i);
+                    }
+                    updateUI();
+                }
+            }
+
+            // --- Speed Slider ---
+            speedSlider.addEventListener('input', (e) => {
+                animationSpeed = parseInt(e.target.value);
+                const speedMultiplier = (1000 / animationSpeed).toFixed(1);
+                speedValue.innerText = `${speedMultiplier}x`;
+                
+                // If playing, restart with new speed
+                if (isPlaying) {
+                    pause();
+                    play();
+                }
+            });
+
+            // --- Button Event Listeners ---
+            playBtn.addEventListener('click', play);
+            pauseBtn.addEventListener('click', pause);
+            resetBtn.addEventListener('click', reset);
+            nextBtn.addEventListener('click', nextStep);
+            prevBtn.addEventListener('click', prevStep);
+
+            // --- Profile Card Functionality ---
+            const profileCard = document.getElementById('profileCard');
+            const closeProfile = document.getElementById('closeProfile');
+            
+            function showProfile(userId) {
+                const userDetails = graphData.user_details[userId];
+                if (!userDetails) {
+                    console.error('No details found for user', userId);
+                    return;
+                }
+                
+                // Populate profile data
+                document.getElementById('profileAvatar').innerText = userId.toString().charAt(0);
+                document.getElementById('profileName').innerText = userDetails.name;
+                document.getElementById('profileId').innerText = `ID: ${userId}`;
+                document.getElementById('profileFriendCount').innerText = userDetails.friendCount;
+                
+                // Format PageRank
+                const pagerank = userDetails.pagerank || 0;
+                document.getElementById('profilePageRank').innerText = pagerank.toFixed(4);
+                
+                // Calculate PageRank bar width (normalize to max 100%)
+                const maxPagerank = Math.max(...Object.values(graphData.user_details).map(u => u.pagerank || 0));
+                const barWidth = maxPagerank > 0 ? (pagerank / maxPagerank * 100) : 0;
+                document.getElementById('profilePageRankBar').style.width = `${barWidth}%`;
+                
+                // Display tags
+                const tagsContainer = document.getElementById('profileTags');
+                if (userDetails.tags && userDetails.tags.length > 0) {
+                    tagsContainer.innerHTML = userDetails.tags
+                        .map(tag => `<span class="profile-tag">${tag}</span>`)
+                        .join('');
+                } else {
+                    tagsContainer.innerHTML = '<span style="color: #666;">No interests listed</span>';
+                }
+                
+                // Display friends
+                const friendsContainer = document.getElementById('profileFriends');
+                if (userDetails.friends && userDetails.friends.length > 0) {
+                    friendsContainer.innerHTML = userDetails.friends
+                        .map(friendId => `<span class="profile-friend" onclick="showProfile(${friendId})">User ${friendId}</span>`)
+                        .join('');
+                } else {
+                    friendsContainer.innerHTML = '<span style="color: #666;">No connections</span>';
+                }
+                
+                // Show the card with animation
+                profileCard.classList.add('active');
+            }
+            
+            function hideProfile() {
+                profileCard.classList.remove('active');
+            }
+            
+            // Close button event
+            closeProfile.addEventListener('click', hideProfile);
+            
+            // Click outside to close
+            profileCard.addEventListener('click', (e) => {
+                if (e.target === profileCard) {
+                    hideProfile();
+                }
+            });
+            
+            // Node click event
+            network.on('click', (params) => {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    showProfile(nodeId);
+                }
+            });
+            
+            // Make showProfile global so friend buttons work
+            window.showProfile = showProfile;
+
+            // Initialize UI and display algorithm info
+            displayAlgorithmInfo();
+            updateUI();
+
+        } else {
+            alert("No graph data found! Run the C++ program and select 'Export to Web' first.");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+#pragma once
+// using namespace std;
+#include "../SocialNetwork.h"
+#include <vector>
+
+
+//Recommends users based on proximity (common friends count).
+//network The populated SocialNetwork object.
+//userID The user to generate recommendations for.
+//top_k The number of recommendations to return.
+//Returns a vector of recommended user IDs, sorted by score.
+ 
+vector<int> recommend_by_proximity(const SocialNetwork& network, int userID, int top_k);

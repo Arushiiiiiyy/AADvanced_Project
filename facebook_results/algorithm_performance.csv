@@ -1,11 +1,11 @@
 algorithm,runtime_seconds,memory_mb,output_lines,status
-Degree Centrality,0.6187739159795456,0.125,4040,success
-Closeness Centrality,1.2233832079800777,0.015625,4040,success
-Betweenness Centrality,2.885231374995783,0,4040,success
-Eigenvector Centrality,0.498040915990714,0,4040,success
-PageRank,0.49490425002295524,0.015625,4040,success
-Label Propagation,0.5612861659610644,0,28,success
-Bellman-Ford,0.5712121250107884,0,4040,success
-Dijkstra,0.6488406250136904,0.0625,4040,success
-Kosaraju SCC,0.7056641249801032,0.203125,4040,success
-Tarjan SCC,0.6525804169941694,0.046875,4040,success
+Degree Centrality,0.6574559159926139,0.0625,4040,success
+Closeness Centrality,0.8964879169943742,0.03125,4040,success
+Betweenness Centrality,2.7883370839990675,0,4040,success
+Eigenvector Centrality,0.45504083298146725,0,4040,success
+PageRank,0.540615624981001,0,4040,success
+Label Propagation,0.8292519169626758,0.125,31,success
+Bellman-Ford,0.43411825003568083,0.03125,4040,success
+Dijkstra,0.7046742499805987,0,4040,success
+Kosaraju SCC,0.41050504200393334,0,4040,success
+Tarjan SCC,0.6858054579934105,0.1875,4040,success

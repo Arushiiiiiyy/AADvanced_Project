@@ -1,0 +1,12 @@
+# Compiled executable
+recommender
+
+# Object files
+*.o
+
+# Mac/OS specific
+.DS_Store
+.vscode/
+c_cpp_properties.json
+launch.json
+settings.json

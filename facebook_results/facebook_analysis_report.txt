@@ -1,6 +1,6 @@
 ======================================================================
 FACEBOOK NETWORK ANALYSIS REPORT
-Generated: 2025-12-02 04:53:51
+Generated: 2025-12-02 05:09:04
 ======================================================================
 
 DATASET INFORMATION
@@ -15,24 +15,24 @@ ALGORITHM PERFORMANCE COMPARISON
 -----------------------------------
 Algorithm                 Time(s)    Memory(MB)   Status    
 ----------------------------------------------------------------------
-PageRank                    0.495       0.02    success   
-Eigenvector Centrality      0.498       0.00    success   
-Label Propagation           0.561       0.00    success   
-Bellman-Ford                0.571       0.00    success   
-Degree Centrality           0.619       0.12    success   
-Dijkstra                    0.649       0.06    success   
-Tarjan SCC                  0.653       0.05    success   
-Kosaraju SCC                0.706       0.20    success   
-Closeness Centrality        1.223       0.02    success   
-Betweenness Centrality      2.885       0.00    success   
+Kosaraju SCC                0.411       0.00    success   
+Bellman-Ford                0.434       0.03    success   
+Eigenvector Centrality      0.455       0.00    success   
+PageRank                    0.541       0.00    success   
+Degree Centrality           0.657       0.06    success   
+Tarjan SCC                  0.686       0.19    success   
+Dijkstra                    0.705       0.00    success   
+Label Propagation           0.829       0.12    success   
+Closeness Centrality        0.896       0.03    success   
+Betweenness Centrality      2.788       0.00    success   
 
 PERFORMANCE INSIGHTS
 --------------------
-⚡ Fastest Algorithm: PageRank (0.495s)
-🐌 Slowest Algorithm: Betweenness Centrality (2.885s)
-💾 Lowest Memory: Eigenvector Centrality (0.00MB)
-🔥 Highest Memory: Kosaraju SCC (0.20MB)
-📈 Speed Difference: 5.8x faster (fastest vs slowest)
+⚡ Fastest Algorithm: Kosaraju SCC (0.411s)
+🐌 Slowest Algorithm: Betweenness Centrality (2.788s)
+💾 Lowest Memory: Kosaraju SCC (0.00MB)
+🔥 Highest Memory: Tarjan SCC (0.19MB)
+📈 Speed Difference: 6.8x faster (fastest vs slowest)
 
 OUTPUT FILES
 ------------
