@@ -59,7 +59,7 @@ def save_graph_to_text_files(G, base_filename, data_dir):
         writer = csv.writer(f)
         writer.writerow(['Node_ID', 'Interest', 'Extraversion'])
         for node, attrs in G_int.nodes(data=True):
-            writer. writerow([node, attrs. get('Interest', 'Unknown'), attrs.get('Extraversion', 0. 5)])
+            writer.writerow([node, attrs.get('Interest', 'Unknown'), attrs.get('Extraversion', 0.5)])
 
     return edgelist_file, nodes_file
 
@@ -101,8 +101,8 @@ def discover_snap_datasets(snap_dir):
     
     datasets = {}
     for file in os.listdir(snap_dir):
-        if file.endswith('. txt'):
-            name = file.replace('.txt', '').replace('-', '_'). lower()
+        if file.endswith('.txt'):
+            name = file.replace('.txt', '').replace('-', '_').lower()
             datasets[f"snap_{name}"] = os.path.join(snap_dir, file)
     
     return datasets
@@ -208,7 +208,7 @@ def run_all_benchmarks(datasets, output_dir, use_cpp=True):
         },
         'closeness': {
             'cpp': os.path.join(CODES_DIR, 'Centrality', 'closeness_centrality'),
-            'python': nx. closeness_centrality,
+            'python': nx.closeness_centrality,
         },
         'betweenness': {
             'cpp': os.path.join(CODES_DIR, 'Centrality', 'betweenness_centrality'),
@@ -280,12 +280,12 @@ def run_all_benchmarks(datasets, output_dir, use_cpp=True):
             
             # Try C++ first (if enabled and exists)
             output_csv = os.path.join(results_dir, f"{algo_name}_{dataset_name}.csv")
-            time_file = os.path.join(results_dir, f"{algo_name}_{dataset_name}_time. txt")
+            time_file = os.path.join(results_dir, f"{algo_name}_{dataset_name}_time.txt")
             
             success = False
             impl_used = "Python"
             
-            if use_cpp and algo_info. get('cpp'):
+            if use_cpp and algo_info.get('cpp'):
                 cpp_exe = algo_info['cpp']
                 if os.path.exists(cpp_exe) and os.access(cpp_exe, os.X_OK):
                     runtime, status = run_cpp_algorithm(cpp_exe, edges_file, output_csv)
@@ -297,7 +297,7 @@ def run_all_benchmarks(datasets, output_dir, use_cpp=True):
                         
                         # Save timing
                         with open(time_file, 'w') as f:
-                            f. write(f"{runtime}\n")
+                            f.write(f"{runtime}\n")
                         
                         benchmark_results.append({
                             'dataset': dataset_name,
@@ -347,7 +347,7 @@ def run_all_benchmarks(datasets, output_dir, use_cpp=True):
     
     # Save results
     df = pd.DataFrame(benchmark_results)
-    results_csv = os.path.join(output_dir, "benchmark_results. csv")
+    results_csv = os.path.join(output_dir, "benchmark_results.csv")
     df.to_csv(results_csv, index=False)
     
     print("\n" + "="*70)
@@ -366,7 +366,7 @@ def create_visualizations(df, output_dir):
     os.makedirs(plots_dir, exist_ok=True)
     
     # Filter successful runs
-    df_success = df[df['status'] == 'Success']. copy()
+    df_success = df[df['status'] == 'Success'].copy()
     
     if df_success.empty:
         print("⚠️  No successful runs to plot")
@@ -380,12 +380,12 @@ def create_visualizations(df, output_dir):
         plt.plot(subset['dataset'], subset['runtime_ms'], marker='o', label=algo, linewidth=2)
     
     plt. yscale('log')
-    plt. ylabel('Runtime (ms, log scale)', fontsize=12)
+    plt.ylabel('Runtime (ms, log scale)', fontsize=12)
     plt.xlabel('Dataset', fontsize=12)
     plt.title('Algorithm Performance Comparison Across Datasets', fontsize=14, fontweight='bold')
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt. xticks(rotation=45, ha='right')
-    plt. grid(True, alpha=0. 3)
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.savefig(os.path.join(plots_dir, 'runtime_comparison.png'), dpi=300)
     plt.close()
@@ -396,17 +396,17 @@ def create_visualizations(df, output_dir):
     
     for algo in df_success['algorithm'].unique():
         subset = df_success[df_success['algorithm'] == algo]
-        plt. scatter(subset['edges'], subset['runtime_ms'], label=algo, s=100, alpha=0.6)
+        plt.scatter(subset['edges'], subset['runtime_ms'], label=algo, s=100, alpha=0.6)
     
     plt.xscale('log')
     plt. yscale('log')
     plt.xlabel('Number of Edges (log scale)', fontsize=12)
     plt.ylabel('Runtime (ms, log scale)', fontsize=12)
     plt.title('Runtime Scaling with Graph Size', fontsize=14, fontweight='bold')
-    plt. legend()
+    plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(os. path.join(plots_dir, 'scaling_analysis.png'), dpi=300)
+    plt.savefig(os.path.join(plots_dir, 'scaling_analysis.png'), dpi=300)
     plt.close()
     print(f"📊 Saved: plots/scaling_analysis.png")
     
@@ -423,7 +423,7 @@ def create_visualizations(df, output_dir):
             plt.xticks(rotation=45, ha='right')
             plt.legend(title='Implementation')
             plt.tight_layout()
-            plt.savefig(os.path.join(plots_dir, 'implementation_comparison. png'), dpi=300)
+            plt.savefig(os.path.join(plots_dir, 'implementation_comparison.png'), dpi=300)
             plt.close()
             print(f"📊 Saved: plots/implementation_comparison.png")
     

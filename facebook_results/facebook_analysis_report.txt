@@ -1,0 +1,43 @@
+======================================================================
+FACEBOOK NETWORK ANALYSIS REPORT
+Generated: 2025-12-02 04:16:09
+======================================================================
+
+DATASET INFORMATION
+--------------------
+Source: SNAP Facebook Social Circles
+Nodes: 4,039
+Edges: 88,234
+Avg Degree: 43.69
+Density: 0.010820
+
+ALGORITHM PERFORMANCE COMPARISON
+-----------------------------------
+Algorithm                 Time(s)    Memory(MB)   Status    
+----------------------------------------------------------------------
+PageRank                    0.149       0.03    success   
+Kosaraju SCC                0.177       0.25    success   
+Tarjan SCC                  0.178       0.17    success   
+Dijkstra                    0.179       0.00    success   
+Label Propagation           0.186       0.00    success   
+Bellman-Ford                0.187       0.00    success   
+Eigenvector Centrality      0.196       0.05    success   
+Degree Centrality           0.379       0.03    success   
+Closeness Centrality        0.601       0.02    success   
+Betweenness Centrality      2.282       0.02    success   
+
+PERFORMANCE INSIGHTS
+--------------------
+⚡ Fastest Algorithm: PageRank (0.149s)
+🐌 Slowest Algorithm: Betweenness Centrality (2.282s)
+💾 Lowest Memory: Dijkstra (0.00MB)
+🔥 Highest Memory: Kosaraju SCC (0.25MB)
+📈 Speed Difference: 15.4x faster (fastest vs slowest)
+
+OUTPUT FILES
+------------
+fb_betweenness_centrality.csv :     58.2 KB
+fb_closeness_centrality.csv   :     54.2 KB
+fb_degree_centrality.csv      :     30.1 KB
+fb_eigenvector_centrality.csv :     54.2 KB
+fb_pagerank.csv               :     54.2 KB
