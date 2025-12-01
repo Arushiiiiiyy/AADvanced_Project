@@ -152,17 +152,38 @@ def run_algorithm_with_source(exe_path, dataset_path, output_dir, algo_name, sou
         runtime = end_time - start_time
         
         if result.returncode == 0:
-            # Count output files or lines in stdout
-            output_lines = len(result.stdout.splitlines()) if result.stdout else 0
-            print(f"✅ {algo_name}: {runtime:.3f}s | {memory_used:.2f}MB | {output_lines} output lines")
+            # These algorithms create output files with predictable names
+            algo_key = exe_path.stem.lower()
+            if algo_key == 'bellmann_ford':
+                output_filename = f"bellmanford_output_facebook_combined_from_{source_node}.txt"
+            elif algo_key == 'djikstra_edge':
+                output_filename = f"dijkstra_output_facebook_combined_from_{source_node}.txt"
+            else:
+                output_filename = f"{algo_key}_output_from_{source_node}.txt"
             
-            return {
-                'algorithm': algo_name,
-                'runtime_seconds': runtime,
-                'memory_mb': memory_used,
-                'output_lines': output_lines,
-                'status': 'success'
-            }
+            # Check if output file was created and move it to results directory
+            output_file = PROJECT_ROOT / output_filename
+            if output_file.exists():
+                dest_file = output_dir / f"fb_{output_filename}"
+                import shutil
+                shutil.move(str(output_file), str(dest_file))
+                
+                # Count lines in the moved file
+                with open(dest_file, 'r') as f:
+                    output_lines = sum(1 for _ in f)
+                
+                print(f"✅ {algo_name}: {runtime:.3f}s | {memory_used:.2f}MB | {output_lines} output lines")
+                
+                return {
+                    'algorithm': algo_name,
+                    'runtime_seconds': runtime,
+                    'memory_mb': memory_used,
+                    'output_lines': output_lines,
+                    'status': 'success'
+                }
+            else:
+                print(f"❌ {algo_name}: output file not found")
+                return None
         else:
             print(f"❌ {algo_name}: failed")
             return None

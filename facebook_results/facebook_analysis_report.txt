@@ -1,6 +1,6 @@
 ======================================================================
 FACEBOOK NETWORK ANALYSIS REPORT
-Generated: 2025-12-02 04:16:09
+Generated: 2025-12-02 04:53:51
 ======================================================================
 
 DATASET INFORMATION
@@ -15,24 +15,24 @@ ALGORITHM PERFORMANCE COMPARISON
 -----------------------------------
 Algorithm                 Time(s)    Memory(MB)   Status    
 ----------------------------------------------------------------------
-PageRank                    0.149       0.03    success   
-Kosaraju SCC                0.177       0.25    success   
-Tarjan SCC                  0.178       0.17    success   
-Dijkstra                    0.179       0.00    success   
-Label Propagation           0.186       0.00    success   
-Bellman-Ford                0.187       0.00    success   
-Eigenvector Centrality      0.196       0.05    success   
-Degree Centrality           0.379       0.03    success   
-Closeness Centrality        0.601       0.02    success   
-Betweenness Centrality      2.282       0.02    success   
+PageRank                    0.495       0.02    success   
+Eigenvector Centrality      0.498       0.00    success   
+Label Propagation           0.561       0.00    success   
+Bellman-Ford                0.571       0.00    success   
+Degree Centrality           0.619       0.12    success   
+Dijkstra                    0.649       0.06    success   
+Tarjan SCC                  0.653       0.05    success   
+Kosaraju SCC                0.706       0.20    success   
+Closeness Centrality        1.223       0.02    success   
+Betweenness Centrality      2.885       0.00    success   
 
 PERFORMANCE INSIGHTS
 --------------------
-⚡ Fastest Algorithm: PageRank (0.149s)
-🐌 Slowest Algorithm: Betweenness Centrality (2.282s)
-💾 Lowest Memory: Dijkstra (0.00MB)
-🔥 Highest Memory: Kosaraju SCC (0.25MB)
-📈 Speed Difference: 15.4x faster (fastest vs slowest)
+⚡ Fastest Algorithm: PageRank (0.495s)
+🐌 Slowest Algorithm: Betweenness Centrality (2.885s)
+💾 Lowest Memory: Eigenvector Centrality (0.00MB)
+🔥 Highest Memory: Kosaraju SCC (0.20MB)
+📈 Speed Difference: 5.8x faster (fastest vs slowest)
 
 OUTPUT FILES
 ------------
