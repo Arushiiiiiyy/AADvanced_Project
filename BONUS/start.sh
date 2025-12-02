@@ -1,9 +1,46 @@
 #!/bin/bash
 
+# ============================================================
 # Ultimate Launcher for Small-World Network Analysis
-# This script sets up everything and launches the interactive system
+# This script runs setup first (if needed) then launches the system
+# ============================================================
 
-# Activate virtual environment if it exists
+# Get the directory where the script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Color codes
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# ============================================================
+# STEP 0: Run setup.sh first (if needed)
+# ============================================================
+SETUP_MARKER=".setup_complete"
+
+if [ ! -f "$SETUP_MARKER" ] || [ ! -f "network_analyzer" ] || [ ! -d "venv" ]; then
+    echo ""
+    echo "🔧 First-time setup required. Running setup.sh..."
+    echo ""
+    
+    # Make setup.sh executable if it isn't
+    chmod +x setup.sh 2>/dev/null
+    
+    # Run setup
+    ./setup.sh
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Setup failed. Please check errors above."
+        exit 1
+    fi
+    
+    echo ""
+    echo "════════════════════════════════════════════════════════════════════"
+    echo ""
+fi
+
+# Activate virtual environment
 if [ -d "venv" ]; then
     source venv/bin/activate
 fi
@@ -29,44 +66,13 @@ echo "  • Transport Analysis 🚗"
 echo "  • Interactive Web Dashboard 🌐"
 echo ""
 
-# Check Python
-echo "🔍 Checking prerequisites..."
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python 3 not found. Please install Python 3."
-    exit 1
-fi
-echo "✓ Python 3 found"
-
-# Check if Flask is installed
-if python3 -c "import flask" 2>/dev/null; then
-    echo "✓ Flask installed"
-else
-    echo "⚠️  Flask not installed"
-    echo ""
-    read -p "Install required packages now? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "📦 Installing packages..."
-        pip3 install flask networkx numpy pandas matplotlib
-    fi
-fi
-
-# Check if C++ compiler exists
-if command -v g++ &> /dev/null; then
-    echo "✓ C++ compiler found"
-    
-    # Check if programs are compiled
-    if [ ! -f "network_analyzer" ]; then
-        echo "⚙️  Compiling C++ programs..."
-        ./demo.sh 2>&1 | grep -E "(Compiling|✓)" || true
-    else
-        echo "✓ C++ programs already compiled"
-    fi
-else
-    echo "⚠️  C++ compiler not found (optional)"
-fi
-
+# Quick status check
+echo "📋 System Status:"
+echo -e "  ${GREEN}✓${NC} Python environment ready"
+[ -f "network_analyzer" ] && echo -e "  ${GREEN}✓${NC} C++ programs compiled" || echo -e "  ${YELLOW}⚠${NC} C++ programs not compiled"
+[ -d "small_world_analysis_data" ] && echo -e "  ${GREEN}✓${NC} Network data available" || echo -e "  ${YELLOW}⚠${NC} Network data not generated"
 echo ""
+
 echo "════════════════════════════════════════════════════════════════════"
 echo "                        LAUNCH OPTIONS"
 echo "════════════════════════════════════════════════════════════════════"
@@ -76,28 +82,33 @@ echo ""
 echo "  [1] 🌐 Web Dashboard (Recommended!) - Visual & Interactive"
 echo "  [2] 📋 Terminal Menu - Command-line Interface"
 echo "  [3] 📚 View Documentation"
+echo "  [4] 🔧 Re-run Setup (force recompile)"
 echo "  [0] Exit"
 echo ""
 
-read -p "Enter choice (0-3): " choice
+read -p "Enter choice (0-4): " choice
 
 case $choice in
     1)
         echo ""
         echo "🚀 Launching Web Dashboard..."
         echo ""
+        
+        # Kill any existing process on port 8080
+        fuser -k 8080/tcp 2>/dev/null
+        
         echo "┌────────────────────────────────────────────────────────────┐"
-        echo "│  The dashboard will open at: http://localhost:5000        │"
+        echo "│  The dashboard will open at: http://localhost:8080        │"
         echo "│  Press Ctrl+C to stop the server                          │"
         echo "└────────────────────────────────────────────────────────────┘"
         echo ""
         sleep 2
         
         # Try to open browser automatically
-        if command -v open &> /dev/null; then
-            sleep 3 && open http://localhost:5000 &
-        elif command -v xdg-open &> /dev/null; then
-            sleep 3 && xdg-open http://localhost:5000 &
+        if command -v xdg-open &> /dev/null; then
+            sleep 3 && xdg-open http://localhost:8080 &
+        elif command -v open &> /dev/null; then
+            sleep 3 && open http://localhost:8080 &
         fi
         
         python3 web_dashboard.py
@@ -112,24 +123,21 @@ case $choice in
         echo ""
         echo "📚 Documentation Files:"
         echo "  • README.md - Complete documentation"
-        echo "  • QUICKSTART.md - Getting started guide"
-        echo "  • SUMMARY.md - Project summary"
         echo ""
-        read -p "Which file to view? (readme/quickstart/summary): " doc
-        case $doc in
-            readme|r)
-                less README.md
-                ;;
-            quickstart|q)
-                less QUICKSTART.md
-                ;;
-            summary|s)
-                less SUMMARY.md
-                ;;
-            *)
-                cat README.md
-                ;;
-        esac
+        if [ -f "README.md" ]; then
+            read -p "View README.md? (y/n): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                less README.md 2>/dev/null || cat README.md
+            fi
+        else
+            echo "No documentation files found."
+        fi
+        ;;
+    4)
+        echo ""
+        echo "🔧 Re-running setup..."
+        ./setup.sh --force
         ;;
     0)
         echo ""

@@ -176,6 +176,30 @@
             transition: all 0.3s ease;
         }
 
+        /* Fix dropdown select to display properly */
+        select {
+            appearance: menulist;
+            -webkit-appearance: menulist;
+            -moz-appearance: menulist;
+            background-color: white;
+            cursor: pointer;
+            min-width: 160px;
+            height: auto;
+            max-height: 42px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+        }
+
+        select option {
+            padding: 10px;
+            background: white;
+            color: #333;
+        }
+
         input[type="range"] {
             width: 200px;
         }
@@ -218,7 +242,11 @@
 
         .large-graph {
             grid-column: 1 / -1;
+        }
+        
+        .large-graph .graph-container {
             height: 450px;
+            min-height: 450px;
         }
 
         /* Chart containers for Plotly */
@@ -226,8 +254,8 @@
         #influence-chart,
         #comparison-chart {
             width: 100%;
-            height: 100%;
-            min-height: 400px;
+            height: 450px !important;
+            min-height: 450px !important;
         }
 
         .loading {
@@ -428,6 +456,9 @@
             <button class="tab active" onclick="showTab('overview')">📊 Overview</button>
             <button class="tab" onclick="showTab('disease')">🦠 Disease Spread</button>
             <button class="tab" onclick="showTab('influence')">📱 Social Influence</button>
+            <button class="tab" onclick="showTab('cooperation')">🤝 Cooperation</button>
+            <button class="tab" onclick="showTab('transport')">🚗 Transport</button>
+            <button class="tab" onclick="showTab('network3d')">🌐 3D View</button>
             <button class="tab" onclick="showTab('comparison')">📈 Comparison</button>
         </div>
 
@@ -551,7 +582,7 @@
                 <div class="card-header">
                     <div class="card-title">Disease Spread Over Time</div>
                 </div>
-                <div id="disease-chart" class="graph-container large-graph"></div>
+                <div id="disease-chart"></div>
             </div>
         </div>
 
@@ -582,17 +613,209 @@
                 <div class="card-header">
                     <div class="card-title">Information Diffusion Over Time</div>
                 </div>
-                <div id="influence-chart" class="graph-container large-graph"></div>
+                <div id="influence-chart"></div>
+            </div>
+        </div>
+
+        <!-- Cooperation Tab -->
+        <div id="cooperation" class="tab-content">
+            <div class="controls">
+                <h3>🤝 Cooperation Evolution (Prisoner's Dilemma)</h3>
+                <div class="control-row">
+                    <label>Network:</label>
+                    <select id="cooperation-network">
+                        <option value="small_world">Small-World (WS)</option>
+                        <option value="random">Random (ER)</option>
+                        <option value="scale_free">Scale-Free (BA)</option>
+                    </select>
+
+                    <label>Temptation (T):</label>
+                    <input type="range" id="temptation" min="1" max="2" step="0.1" value="1.5">
+                    <span id="temptation-value">1.5</span>
+
+                    <button onclick="runCooperationSimulation()">
+                        <span id="cooperation-status" class="status-indicator status-idle"></span>
+                        Run Simulation
+                    </button>
+                </div>
+                <div class="info-box" style="margin-top: 15px;">
+                    <h4>About Prisoner's Dilemma:</h4>
+                    <ul>
+                        <li><strong>T > 1</strong>: Temptation to defect against cooperators</li>
+                        <li>Nodes copy strategy of most successful neighbor</li>
+                        <li>Small-world networks often sustain cooperation better</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card large-graph">
+                <div class="card-header">
+                    <div class="card-title">Cooperation Evolution Over Time</div>
+                </div>
+                <div id="cooperation-chart"></div>
+            </div>
+        </div>
+
+        <!-- Transport Tab -->
+        <div id="transport" class="tab-content">
+            <div class="controls">
+                <h3>🚗 Transport & Navigation Efficiency</h3>
+                <div class="control-row">
+                    <label>Network:</label>
+                    <select id="transport-network">
+                        <option value="small_world">Small-World (WS)</option>
+                        <option value="random">Random (ER)</option>
+                        <option value="scale_free">Scale-Free (BA)</option>
+                    </select>
+
+                    <button onclick="runTransportSimulation()">
+                        <span id="transport-status" class="status-indicator status-idle"></span>
+                        Analyze Transport
+                    </button>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Transport Metrics</div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-box">
+                            <div class="metric-label">Avg Path Length</div>
+                            <div class="metric-value" id="transport-path">-</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Efficiency</div>
+                            <div class="metric-value" id="transport-efficiency">-</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Hub Vulnerability</div>
+                            <div class="metric-value" id="transport-vulnerability">-</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-label">Network Type</div>
+                            <div class="metric-value" id="transport-type">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Hub Usage Distribution</div>
+                    </div>
+                    <div id="hub-chart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Network View Tab -->
+        <div id="network3d" class="tab-content">
+            <div class="controls">
+                <h3>🌐 3D Network Visualization</h3>
+                <div class="control-row">
+                    <label>Network:</label>
+                    <select id="network3d-select" onchange="load3DNetwork()">
+                        <option value="small_world">Small-World (WS)</option>
+                        <option value="random">Random (ER)</option>
+                        <option value="scale_free">Scale-Free (BA)</option>
+                    </select>
+                    <button onclick="load3DNetwork()">
+                        Refresh 3D View
+                    </button>
+                </div>
+                <div class="info-box" style="margin-top: 15px;">
+                    <h4>3D Controls:</h4>
+                    <ul>
+                        <li><strong>Rotate:</strong> Click and drag</li>
+                        <li><strong>Zoom:</strong> Scroll wheel</li>
+                        <li><strong>Pan:</strong> Right-click and drag</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card large-graph">
+                <div class="card-header">
+                    <div class="card-title">3D Network Structure</div>
+                </div>
+                <div id="network3d-chart" style="height: 500px;"></div>
             </div>
         </div>
 
         <!-- Comparison Tab -->
         <div id="comparison" class="tab-content">
+            <div class="controls">
+                <h3>📈 Compare All Network Types</h3>
+                <div class="control-row">
+                    <label>Simulation Type:</label>
+                    <select id="comparison-type">
+                        <option value="metrics">Network Metrics (C, L)</option>
+                        <option value="disease">Disease Spread</option>
+                        <option value="influence">Social Influence</option>
+                        <option value="cooperation">Cooperation Evolution</option>
+                        <option value="transport">Transport Efficiency</option>
+                    </select>
+                    
+                    <button onclick="runComparison()">
+                        <span id="comparison-status" class="status-indicator status-idle"></span>
+                        Run Comparison
+                    </button>
+                </div>
+                
+                <div id="comparison-params" style="margin-top: 15px; display: none;">
+                    <!-- Disease params -->
+                    <div id="disease-params" class="control-row" style="display: none;">
+                        <label>Infection Rate (β):</label>
+                        <input type="range" id="comp-beta" min="0" max="1" step="0.1" value="0.3">
+                        <span id="comp-beta-value">0.3</span>
+                        <label>Recovery Rate (γ):</label>
+                        <input type="range" id="comp-gamma" min="0" max="1" step="0.1" value="0.1">
+                        <span id="comp-gamma-value">0.1</span>
+                    </div>
+                    <!-- Influence params -->
+                    <div id="influence-params" class="control-row" style="display: none;">
+                        <label>Adoption Threshold:</label>
+                        <input type="range" id="comp-threshold" min="0" max="1" step="0.1" value="0.3">
+                        <span id="comp-threshold-value">0.3</span>
+                    </div>
+                    <!-- Cooperation params -->
+                    <div id="cooperation-params" class="control-row" style="display: none;">
+                        <label>Temptation (T):</label>
+                        <input type="range" id="comp-temptation" min="1" max="2" step="0.1" value="1.5">
+                        <span id="comp-temptation-value">1.5</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="card large-graph">
                 <div class="card-header">
-                    <div class="card-title">Network Metrics Comparison</div>
+                    <div class="card-title" id="comparison-title">Network Metrics Comparison</div>
                 </div>
-                <div id="comparison-chart" class="graph-container large-graph"></div>
+                <div id="comparison-chart"></div>
+            </div>
+            
+            <!-- Additional comparison results -->
+            <div id="comparison-details" class="dashboard-grid" style="margin-top: 20px; display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Small-World (WS)</div>
+                        <span class="network-type-badge badge-ws">WS</span>
+                    </div>
+                    <div id="comp-ws-chart" style="height: 250px;"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Random (ER)</div>
+                        <span class="network-type-badge badge-er">ER</span>
+                    </div>
+                    <div id="comp-er-chart" style="height: 250px;"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Scale-Free (BA)</div>
+                        <span class="network-type-badge badge-ba">BA</span>
+                    </div>
+                    <div id="comp-ba-chart" style="height: 250px;"></div>
+                </div>
             </div>
         </div>
 
@@ -774,20 +997,38 @@
             const gamma = parseFloat(document.getElementById('gamma').value);
             
             const status = document.getElementById('disease-status');
+            const chartDiv = document.getElementById('disease-chart');
+            
             status.classList.remove('status-idle');
             status.classList.add('status-running');
             
+            // Show loading message
+            chartDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:400px;"><div class="spinner"></div><span style="margin-left:15px;">Running simulation...</span></div>';
+            
             try {
+                console.log('Sending disease simulation request:', { network, beta, gamma });
+                
                 const response = await fetch('/api/simulate/disease', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ network, beta, gamma })
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
-                plotDiseaseResults(result.timeline);
+                console.log('Disease simulation result:', result);
+                
+                if (result.timeline && result.timeline.length > 0) {
+                    plotDiseaseResults(result.timeline);
+                } else {
+                    chartDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:400px;color:#f44336;">No data returned from simulation</div>';
+                }
             } catch (error) {
                 console.error('Simulation error:', error);
+                chartDiv.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:400px;color:#f44336;">Error: ${error.message}</div>`;
             } finally {
                 status.classList.remove('status-running');
                 status.classList.add('status-idle');
@@ -795,6 +1036,10 @@
         }
 
         function plotDiseaseResults(timeline) {
+            // Clear any loading spinners first
+            const chartDiv = document.getElementById('disease-chart');
+            chartDiv.innerHTML = '';
+            
             const steps = timeline.map(d => d.step);
             const susceptible = timeline.map(d => d.susceptible);
             const infected = timeline.map(d => d.infected);
@@ -871,27 +1116,48 @@
             const threshold = parseFloat(document.getElementById('threshold').value);
             
             const status = document.getElementById('influence-status');
+            const chartDiv = document.getElementById('influence-chart');
+            
             status.classList.remove('status-idle');
             status.classList.add('status-running');
             
+            // Show loading message
+            chartDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:400px;"><div class="spinner"></div><span style="margin-left:15px;">Running simulation...</span></div>';
+            
             try {
+                console.log('Sending influence simulation request:', { network, threshold });
+                
                 const response = await fetch('/api/simulate/influence', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ network, threshold })
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
-                plotInfluenceResults(result.timeline);
+                console.log('Influence simulation result:', result);
+                
+                if (result.timeline && result.timeline.length > 0) {
+                    plotInfluenceResults(result.timeline);
+                } else {
+                    chartDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:400px;color:#f44336;">No data returned from simulation</div>';
+                }
             } catch (error) {
                 console.error('Simulation error:', error);
+                chartDiv.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:400px;color:#f44336;">Error: ${error.message}</div>`;
             } finally {
-                status.classList.remove('status-running');
                 status.classList.add('status-idle');
             }
         }
 
         function plotInfluenceResults(timeline) {
+            // Clear any loading spinners first
+            const chartDiv = document.getElementById('influence-chart');
+            chartDiv.innerHTML = '';
+            
             const steps = timeline.map(d => d.step);
             const adopters = timeline.map(d => d.adopters);
             const percentage = timeline.map(d => d.percentage);
@@ -1010,21 +1276,590 @@
             Plotly.newPlot('comparison-chart', [trace1, trace2], layout, config);
         }
 
+        // ==========================================
+        // DYNAMIC COMPARISON FUNCTIONS
+        // ==========================================
+        
+        // Show/hide parameter inputs based on comparison type
+        document.getElementById('comparison-type').addEventListener('change', (e) => {
+            const type = e.target.value;
+            const paramsDiv = document.getElementById('comparison-params');
+            
+            // Hide all param divs
+            document.getElementById('disease-params').style.display = 'none';
+            document.getElementById('influence-params').style.display = 'none';
+            document.getElementById('cooperation-params').style.display = 'none';
+            
+            if (type === 'metrics') {
+                paramsDiv.style.display = 'none';
+            } else {
+                paramsDiv.style.display = 'block';
+                if (type === 'disease') {
+                    document.getElementById('disease-params').style.display = 'flex';
+                } else if (type === 'influence') {
+                    document.getElementById('influence-params').style.display = 'flex';
+                } else if (type === 'cooperation') {
+                    document.getElementById('cooperation-params').style.display = 'flex';
+                }
+            }
+        });
+        
+        // Comparison param listeners
+        document.getElementById('comp-beta').addEventListener('input', (e) => {
+            document.getElementById('comp-beta-value').textContent = e.target.value;
+        });
+        document.getElementById('comp-gamma').addEventListener('input', (e) => {
+            document.getElementById('comp-gamma-value').textContent = e.target.value;
+        });
+        document.getElementById('comp-threshold').addEventListener('input', (e) => {
+            document.getElementById('comp-threshold-value').textContent = e.target.value;
+        });
+        document.getElementById('comp-temptation').addEventListener('input', (e) => {
+            document.getElementById('comp-temptation-value').textContent = e.target.value;
+        });
+
+        async function runComparison() {
+            const compType = document.getElementById('comparison-type').value;
+            const status = document.getElementById('comparison-status');
+            const chartDiv = document.getElementById('comparison-chart');
+            const detailsDiv = document.getElementById('comparison-details');
+            const titleDiv = document.getElementById('comparison-title');
+            
+            status.classList.remove('status-idle');
+            status.classList.add('status-running');
+            
+            chartDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:400px;"><div class="spinner"></div><span style="margin-left:15px;">Running comparison across all networks...</span></div>';
+            
+            try {
+                if (compType === 'metrics') {
+                    detailsDiv.style.display = 'none';
+                    titleDiv.textContent = 'Network Metrics Comparison';
+                    loadComparisonChart();
+                } else if (compType === 'disease') {
+                    await compareDiseaseSpread();
+                } else if (compType === 'influence') {
+                    await compareInfluence();
+                } else if (compType === 'cooperation') {
+                    await compareCooperation();
+                } else if (compType === 'transport') {
+                    await compareTransport();
+                }
+            } catch (error) {
+                console.error('Comparison error:', error);
+                chartDiv.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:400px;color:#f44336;">Error: ${error.message}</div>`;
+            } finally {
+                status.classList.remove('status-running');
+                status.classList.add('status-idle');
+            }
+        }
+
+        async function compareDiseaseSpread() {
+            const beta = parseFloat(document.getElementById('comp-beta').value);
+            const gamma = parseFloat(document.getElementById('comp-gamma').value);
+            const networks = ['small_world', 'random', 'scale_free'];
+            const results = {};
+            
+            document.getElementById('comparison-title').textContent = 'Disease Spread Comparison (SIR Model)';
+            document.getElementById('comparison-details').style.display = 'none';
+            
+            for (const network of networks) {
+                const response = await fetch('/api/simulate/disease', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ network, beta, gamma })
+                });
+                results[network] = await response.json();
+            }
+            
+            // Plot combined comparison
+            const chartDiv = document.getElementById('comparison-chart');
+            chartDiv.innerHTML = '';
+            
+            const traces = [];
+            const colors = { small_world: '#4caf50', random: '#ff9800', scale_free: '#e91e63' };
+            const names = { small_world: 'Small-World', random: 'Random', scale_free: 'Scale-Free' };
+            
+            for (const network of networks) {
+                const timeline = results[network].timeline;
+                traces.push({
+                    x: timeline.map(d => d.step),
+                    y: timeline.map(d => d.infected),
+                    name: `${names[network]} - Infected`,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: colors[network], width: 3 }
+                });
+            }
+            
+            const layout = {
+                title: { text: 'Infection Curves Comparison', font: { size: 18, color: '#667eea' } },
+                xaxis: { title: 'Time Steps' },
+                yaxis: { title: 'Number Infected' },
+                paper_bgcolor: '#fafafa',
+                plot_bgcolor: 'white',
+                showlegend: true
+            };
+            
+            Plotly.newPlot('comparison-chart', traces, layout, { responsive: true, displaylogo: false });
+        }
+
+        async function compareInfluence() {
+            const threshold = parseFloat(document.getElementById('comp-threshold').value);
+            const networks = ['small_world', 'random', 'scale_free'];
+            const results = {};
+            
+            document.getElementById('comparison-title').textContent = 'Social Influence Comparison';
+            document.getElementById('comparison-details').style.display = 'none';
+            
+            for (const network of networks) {
+                const response = await fetch('/api/simulate/influence', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ network, threshold })
+                });
+                results[network] = await response.json();
+            }
+            
+            const chartDiv = document.getElementById('comparison-chart');
+            chartDiv.innerHTML = '';
+            
+            const traces = [];
+            const colors = { small_world: '#4caf50', random: '#ff9800', scale_free: '#e91e63' };
+            const names = { small_world: 'Small-World', random: 'Random', scale_free: 'Scale-Free' };
+            
+            for (const network of networks) {
+                const timeline = results[network].timeline;
+                traces.push({
+                    x: timeline.map(d => d.step),
+                    y: timeline.map(d => d.percentage),
+                    name: names[network],
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { color: colors[network], width: 3 }
+                });
+            }
+            
+            const layout = {
+                title: { text: 'Adoption Rate Comparison', font: { size: 18, color: '#667eea' } },
+                xaxis: { title: 'Time Steps' },
+                yaxis: { title: 'Adoption Rate (%)', range: [0, 100] },
+                paper_bgcolor: '#fafafa',
+                plot_bgcolor: 'white',
+                showlegend: true
+            };
+            
+            Plotly.newPlot('comparison-chart', traces, layout, { responsive: true, displaylogo: false });
+        }
+
+        async function compareCooperation() {
+            const temptation = parseFloat(document.getElementById('comp-temptation').value);
+            const networks = ['small_world', 'random', 'scale_free'];
+            const results = {};
+            
+            document.getElementById('comparison-title').textContent = 'Cooperation Evolution Comparison';
+            document.getElementById('comparison-details').style.display = 'none';
+            
+            for (const network of networks) {
+                const response = await fetch('/api/simulate/cooperation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ network, temptation })
+                });
+                results[network] = await response.json();
+            }
+            
+            const chartDiv = document.getElementById('comparison-chart');
+            chartDiv.innerHTML = '';
+            
+            const traces = [];
+            const colors = { small_world: '#4caf50', random: '#ff9800', scale_free: '#e91e63' };
+            const names = { small_world: 'Small-World', random: 'Random', scale_free: 'Scale-Free' };
+            
+            for (const network of networks) {
+                const timeline = results[network].timeline;
+                traces.push({
+                    x: timeline.map(d => d.round),
+                    y: timeline.map(d => d.coop_percentage),
+                    name: names[network],
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: colors[network], width: 3 }
+                });
+            }
+            
+            const layout = {
+                title: { text: 'Cooperation Rate Comparison', font: { size: 18, color: '#667eea' } },
+                xaxis: { title: 'Round' },
+                yaxis: { title: 'Cooperators (%)', range: [0, 100] },
+                paper_bgcolor: '#fafafa',
+                plot_bgcolor: 'white',
+                showlegend: true
+            };
+            
+            Plotly.newPlot('comparison-chart', traces, layout, { responsive: true, displaylogo: false });
+        }
+
+        async function compareTransport() {
+            const networks = ['small_world', 'random', 'scale_free'];
+            const results = {};
+            
+            document.getElementById('comparison-title').textContent = 'Transport Efficiency Comparison';
+            document.getElementById('comparison-details').style.display = 'none';
+            
+            for (const network of networks) {
+                const response = await fetch('/api/simulate/transport', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ network })
+                });
+                results[network] = await response.json();
+            }
+            
+            const chartDiv = document.getElementById('comparison-chart');
+            chartDiv.innerHTML = '';
+            
+            const networkNames = ['Small-World', 'Random', 'Scale-Free'];
+            
+            // Scale efficiency to percentage (0-1 -> 0-100%)
+            const trace1 = {
+                x: networkNames,
+                y: [
+                    results.small_world.efficiency * 100, 
+                    results.random.efficiency * 100, 
+                    results.scale_free.efficiency * 100
+                ],
+                name: 'Efficiency (%)',
+                type: 'bar',
+                marker: { color: '#4caf50' },
+                text: [
+                    (results.small_world.efficiency * 100).toFixed(1) + '%',
+                    (results.random.efficiency * 100).toFixed(1) + '%',
+                    (results.scale_free.efficiency * 100).toFixed(1) + '%'
+                ],
+                textposition: 'outside'
+            };
+            
+            const trace2 = {
+                x: networkNames,
+                y: [
+                    results.small_world.avg_path_length, 
+                    results.random.avg_path_length, 
+                    results.scale_free.avg_path_length
+                ],
+                name: 'Avg Path Length',
+                type: 'bar',
+                marker: { color: '#2196f3' },
+                text: [
+                    results.small_world.avg_path_length.toFixed(2),
+                    results.random.avg_path_length.toFixed(2),
+                    results.scale_free.avg_path_length.toFixed(2)
+                ],
+                textposition: 'outside'
+            };
+            
+            const trace3 = {
+                x: networkNames,
+                y: [
+                    results.small_world.vulnerability, 
+                    results.random.vulnerability, 
+                    results.scale_free.vulnerability
+                ],
+                name: 'Hub Vulnerability (%)',
+                type: 'bar',
+                marker: { color: '#f44336' },
+                text: [
+                    results.small_world.vulnerability.toFixed(1) + '%',
+                    results.random.vulnerability.toFixed(1) + '%',
+                    results.scale_free.vulnerability.toFixed(1) + '%'
+                ],
+                textposition: 'outside'
+            };
+            
+            const layout = {
+                title: { text: 'Transport Metrics Comparison', font: { size: 18, color: '#667eea' } },
+                xaxis: { title: 'Network Type' },
+                yaxis: { title: 'Value', range: [0, Math.max(
+                    results.small_world.efficiency * 100 + 10,
+                    results.random.efficiency * 100 + 10,
+                    results.scale_free.efficiency * 100 + 10,
+                    results.small_world.vulnerability + 10,
+                    results.random.vulnerability + 10,
+                    results.scale_free.vulnerability + 10,
+                    results.small_world.avg_path_length + 1,
+                    results.random.avg_path_length + 1,
+                    results.scale_free.avg_path_length + 1
+                )] },
+                barmode: 'group',
+                paper_bgcolor: '#fafafa',
+                plot_bgcolor: 'white',
+                showlegend: true,
+                legend: { x: 0.5, xanchor: 'center', y: -0.2, orientation: 'h' }
+            };
+            
+            Plotly.newPlot('comparison-chart', [trace1, trace2, trace3], layout, { responsive: true, displaylogo: false });
+        }
+
+        // ==========================================
+        // COOPERATION SIMULATION
+        // ==========================================
+        document.getElementById('temptation').addEventListener('input', (e) => {
+            document.getElementById('temptation-value').textContent = e.target.value;
+        });
+
+        async function runCooperationSimulation() {
+            const network = document.getElementById('cooperation-network').value;
+            const temptation = parseFloat(document.getElementById('temptation').value);
+            
+            const status = document.getElementById('cooperation-status');
+            const chartDiv = document.getElementById('cooperation-chart');
+            
+            status.classList.remove('status-idle');
+            status.classList.add('status-running');
+            
+            chartDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:400px;"><div class="spinner"></div><span style="margin-left:15px;">Running simulation...</span></div>';
+            
+            try {
+                const response = await fetch('/api/simulate/cooperation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ network, temptation })
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const result = await response.json();
+                
+                if (result.timeline && result.timeline.length > 0) {
+                    plotCooperationResults(result.timeline);
+                } else {
+                    chartDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:400px;color:#f44336;">No data returned</div>';
+                }
+            } catch (error) {
+                console.error('Cooperation simulation error:', error);
+                chartDiv.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:400px;color:#f44336;">Error: ${error.message}</div>`;
+            } finally {
+                status.classList.remove('status-running');
+                status.classList.add('status-idle');
+            }
+        }
+
+        function plotCooperationResults(timeline) {
+            const chartDiv = document.getElementById('cooperation-chart');
+            chartDiv.innerHTML = '';
+            
+            const rounds = timeline.map(d => d.round);
+            const cooperators = timeline.map(d => d.coop_percentage);
+            const defectors = timeline.map(d => 100 - d.coop_percentage);
+            
+            const traces = [
+                {
+                    x: rounds,
+                    y: cooperators,
+                    name: 'Cooperators (%)',
+                    type: 'scatter',
+                    fill: 'tozeroy',
+                    line: { color: '#4caf50', width: 3 }
+                },
+                {
+                    x: rounds,
+                    y: defectors,
+                    name: 'Defectors (%)',
+                    type: 'scatter',
+                    fill: 'tozeroy',
+                    line: { color: '#f44336', width: 3 }
+                }
+            ];
+            
+            const layout = {
+                title: {
+                    text: 'Cooperation Evolution: Prisoner\'s Dilemma',
+                    font: { size: 18, color: '#667eea' }
+                },
+                xaxis: { title: 'Round', gridcolor: '#f0f0f0' },
+                yaxis: { title: 'Percentage (%)', gridcolor: '#f0f0f0', range: [0, 100] },
+                autosize: true,
+                margin: { l: 60, r: 30, t: 60, b: 60 },
+                paper_bgcolor: '#fafafa',
+                plot_bgcolor: 'white',
+                showlegend: true
+            };
+            
+            Plotly.newPlot('cooperation-chart', traces, layout, { responsive: true, displaylogo: false });
+        }
+
+        // ==========================================
+        // TRANSPORT SIMULATION
+        // ==========================================
+        async function runTransportSimulation() {
+            const network = document.getElementById('transport-network').value;
+            
+            const status = document.getElementById('transport-status');
+            status.classList.remove('status-idle');
+            status.classList.add('status-running');
+            
+            document.getElementById('transport-path').textContent = '...';
+            document.getElementById('transport-efficiency').textContent = '...';
+            document.getElementById('transport-vulnerability').textContent = '...';
+            document.getElementById('transport-type').textContent = '...';
+            
+            try {
+                const response = await fetch('/api/simulate/transport', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ network })
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const result = await response.json();
+                
+                // Update metrics
+                document.getElementById('transport-path').textContent = result.avg_path_length;
+                document.getElementById('transport-efficiency').textContent = result.efficiency;
+                document.getElementById('transport-vulnerability').textContent = result.vulnerability + '%';
+                document.getElementById('transport-type').textContent = network.replace('_', '-').toUpperCase();
+                
+                // Plot hub distribution
+                plotHubDistribution(result.hub_distribution);
+                
+            } catch (error) {
+                console.error('Transport simulation error:', error);
+            } finally {
+                status.classList.remove('status-running');
+                status.classList.add('status-idle');
+            }
+        }
+
+        function plotHubDistribution(hubs) {
+            const chartDiv = document.getElementById('hub-chart');
+            
+            const trace = {
+                x: hubs.map(h => 'Node ' + h.node),
+                y: hubs.map(h => h.usage),
+                type: 'bar',
+                marker: {
+                    color: hubs.map((h, i) => i === 0 ? '#f44336' : '#667eea')
+                }
+            };
+            
+            const layout = {
+                title: { text: 'Top 10 Hub Nodes', font: { size: 14 } },
+                xaxis: { title: 'Node' },
+                yaxis: { title: 'Route Usage' },
+                margin: { l: 50, r: 20, t: 40, b: 60 },
+                paper_bgcolor: '#fafafa',
+                plot_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('hub-chart', [trace], layout, { responsive: true, displaylogo: false });
+        }
+
+        // ==========================================
+        // 3D NETWORK VISUALIZATION
+        // ==========================================
+        async function load3DNetwork() {
+            const networkType = document.getElementById('network3d-select').value;
+            const chartDiv = document.getElementById('network3d-chart');
+            
+            chartDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:500px;"><div class="spinner"></div><span style="margin-left:15px;">Loading 3D network...</span></div>';
+            
+            try {
+                const response = await fetch(`/api/network3d/${networkType}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                plot3DNetwork(data, networkType);
+                
+            } catch (error) {
+                console.error('3D network error:', error);
+                chartDiv.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:500px;color:#f44336;">Error: ${error.message}</div>`;
+            }
+        }
+
+        function plot3DNetwork(data, networkType) {
+            const chartDiv = document.getElementById('network3d-chart');
+            chartDiv.innerHTML = '';
+            
+            // Create edge traces (lines)
+            const edgeX = [], edgeY = [], edgeZ = [];
+            data.edges.forEach(edge => {
+                edgeX.push(edge.x0, edge.x1, null);
+                edgeY.push(edge.y0, edge.y1, null);
+                edgeZ.push(edge.z0, edge.z1, null);
+            });
+            
+            const edgeTrace = {
+                x: edgeX, y: edgeY, z: edgeZ,
+                mode: 'lines',
+                type: 'scatter3d',
+                line: { color: '#888', width: 1 },
+                hoverinfo: 'none',
+                name: 'Edges'
+            };
+            
+            // Create node trace
+            const nodeColors = {
+                'small_world': '#4caf50',
+                'random': '#ff9800',
+                'scale_free': '#e91e63'
+            };
+            
+            const nodeTrace = {
+                x: data.nodes.map(n => n.x),
+                y: data.nodes.map(n => n.y),
+                z: data.nodes.map(n => n.z),
+                mode: 'markers',
+                type: 'scatter3d',
+                marker: {
+                    size: data.nodes.map(n => Math.max(5, n.degree * 2)),
+                    color: data.nodes.map(n => n.degree),
+                    colorscale: 'Viridis',
+                    colorbar: { title: 'Degree', thickness: 15 },
+                    opacity: 0.8
+                },
+                text: data.nodes.map(n => `Node ${n.id}<br>Degree: ${n.degree}`),
+                hoverinfo: 'text',
+                name: 'Nodes'
+            };
+            
+            const layout = {
+                title: {
+                    text: `3D ${networkType.replace('_', ' ').toUpperCase()} Network`,
+                    font: { size: 18, color: '#667eea' }
+                },
+                scene: {
+                    xaxis: { showgrid: false, zeroline: false, showticklabels: false, title: '' },
+                    yaxis: { showgrid: false, zeroline: false, showticklabels: false, title: '' },
+                    zaxis: { showgrid: false, zeroline: false, showticklabels: false, title: '' },
+                    bgcolor: '#fafafa'
+                },
+                margin: { l: 0, r: 0, t: 50, b: 0 },
+                paper_bgcolor: '#fafafa',
+                showlegend: false
+            };
+            
+            const config = {
+                responsive: true,
+                displaylogo: false
+            };
+            
+            Plotly.newPlot('network3d-chart', [edgeTrace, nodeTrace], layout, config);
+        }
+
         // Handle window resize for responsive charts
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
                 // Redraw Plotly charts on resize
-                if (document.getElementById('disease-chart').data) {
-                    Plotly.Plots.resize('disease-chart');
-                }
-                if (document.getElementById('influence-chart').data) {
-                    Plotly.Plots.resize('influence-chart');
-                }
-                if (document.getElementById('comparison-chart').data) {
-                    Plotly.Plots.resize('comparison-chart');
-                }
+                const charts = ['disease-chart', 'influence-chart', 'comparison-chart', 
+                               'cooperation-chart', 'hub-chart', 'network3d-chart'];
+                charts.forEach(chartId => {
+                    const el = document.getElementById(chartId);
+                    if (el && el.data) {
+                        Plotly.Plots.resize(chartId);
+                    }
+                });
                 
                 // Redraw D3 networks on resize if needed
                 if (networksData.small_world) {
